@@ -28,7 +28,6 @@ func (c *ExitMenuCommand) Execute() {
 }
 
 type OnCommand struct {
-	menu *Menu
 	robot *Robot
 }
 
@@ -37,7 +36,6 @@ func (c *OnCommand) Execute() {
 }
 
 type OffCommand struct {
-	menu *Menu
 	robot *Robot
 }
 
@@ -46,8 +44,7 @@ func (c *OffCommand) Execute() {
 }
 
 type WalkCommand struct {
-	menu *Menu
-	robot *Robot
+	robot     *Robot
 	direction int64
 }
 
@@ -55,23 +52,25 @@ func (c *WalkCommand) Execute() {
 	c.robot.Walk(c.direction)
 }
 
-
-type HorseMovingCommand struct {
-	menu *Menu
-	robot *Robot
+type CompositeCommand struct {
+	commands []Command
 }
 
-func (command *HorseMovingCommand) Execute() {
-	a := &WalkCommand{command.menu, command.robot, UP}
-	b := &WalkCommand{command.menu, command.robot, UP}
-	c := &WalkCommand{command.menu, command.robot, LEFT}
-	a.Execute()
-	b.Execute()
-	c.Execute()
+func (c *CompositeCommand) Execute() {
+	for i := 0; i < len(c.commands); i++ {
+		c.commands[i].Execute()
+	}
+}
+
+func (c *CompositeCommand) AddCommand(com Command) {
+	c.commands = append(c.commands, com)
+}
+
+type HorseMovingCommand struct {
+	CompositeCommand
 }
 
 type StatusCommand struct {
-	menu *Menu
 	robot *Robot
 }
 
@@ -80,7 +79,6 @@ func (c *StatusCommand) Execute() {
 }
 
 type StopCommand struct {
-	menu *Menu
 	robot *Robot
 }
 
@@ -88,9 +86,8 @@ func (c *StopCommand) Execute() {
 	c.robot.Stop()
 }
 
-
 const (
-	UP int64 = iota
+	UP           int64 = iota
 	DOWN
 	LEFT
 	RIGHT
@@ -229,20 +226,22 @@ func main() {
 	robot := NewRobot()
 	menu := NewMenu()
 
-	// TODO: implement all or some commands
+	menu.AddItem("on", "Turns the Robot on", &OnCommand{robot})
+	menu.AddItem("off", "Turns the Robot off", &OffCommand{robot})
 
-	menu.AddItem("on", "Turns the Robot on", &OnCommand{menu, robot})
-	menu.AddItem("off", "Turns the Robot off", &OffCommand{menu, robot})
+	menu.AddItem("up", "Makes the Robot walk up", &WalkCommand{robot, UP})
+	menu.AddItem("down", "Makes the Robot walk down", &WalkCommand{robot, DOWN})
+	menu.AddItem("left", "Makes the Robot walk left", &WalkCommand{robot, LEFT})
+	menu.AddItem("right", "Makes the Robot walk right", &WalkCommand{robot, RIGHT})
 
-	menu.AddItem("up", "Makes the Robot walk up", &WalkCommand{menu, robot, UP})
-	menu.AddItem("down", "Makes the Robot walk down", &WalkCommand{menu, robot, DOWN})
-	menu.AddItem("left", "Makes the Robot walk left", &WalkCommand{menu, robot, LEFT})
-	menu.AddItem("right", "Makes the Robot walk right", &WalkCommand{menu, robot, RIGHT})
+	compositeCommand := &HorseMovingCommand{}
+	compositeCommand.AddCommand(&WalkCommand{robot, UP})
+	compositeCommand.AddCommand(&WalkCommand{robot, UP})
+	compositeCommand.AddCommand(&WalkCommand{robot, LEFT})
+	menu.AddItem("horse_moving", "Makes the Robot walk like horse", compositeCommand)
 
-	menu.AddItem("horse_moving", "Makes the Robot walk like horse", &HorseMovingCommand{menu, robot})
-
-	menu.AddItem("status", "Prints Robot status (turned on/off, walk direction)", &StatusCommand{menu, robot})
-	menu.AddItem("stop", "Stops the Robot", &StopCommand{menu, robot})
+	menu.AddItem("status", "Prints Robot status (turned on/off, walk direction)", &StatusCommand{robot})
+	menu.AddItem("stop", "Stops the Robot", &StopCommand{robot})
 
 	menu.AddItem("help", "Show instructions", &ShowHelpCommand{menu})
 	menu.AddItem("exit", "Exit from this menu", &ExitMenuCommand{menu})
