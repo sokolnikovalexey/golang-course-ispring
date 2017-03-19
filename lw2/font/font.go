@@ -5,32 +5,49 @@ import(
 )
 
 type Font struct {
-	fontFamily string
-	size int
+	family string
+	size   int
 }
 
-func (m *Font) String() string {
-	return fmt.Sprintf(`{font-family: "%v"; font-size: %vpt;}`, m.fontFamily, m.size)
+func (f *Font) String() string {
+	return fmt.Sprintf(`{font-family: "%v"; font-size: %vpt;}`, f.family, f.size)
 }
 
-func (m* Font) SetFamily(s string) {
+func (f* Font) SetFamily(s string) {
 	if len(s) > 0	{
-		m.fontFamily = s;
+		f.family = s;
 	}
 }
-func (m* Font) SetSize(i int) {
-	if i > 4 && i < 145 {
-		m.size = i;
+func (f* Font) SetSize(i int) {
+	if i > MIN_FONT_SIZE && i < MAX_FONT_SIZE {
+		f.size = i;
 	}
 }
-func (m *Font) Family() string {
-	return m.fontFamily
+func (f *Font) Family() string {
+	return f.family
 }
-func (m* Font) Size() int {
-	return m.size
+func (f* Font) Size() int {
+	return f.size
 }
+
+const (
+	MIN_FONT_SIZE  = 4
+	MAX_FONT_SIZE = 145
+	DEFAULT_FONT_SIZE = 8
+	DEFAULT_FONT_FAMILY = "Arial"
+
+)
+
 
 func New(fontFamily string, size int) *Font {
+
+	if size <= MIN_FONT_SIZE || size >= MAX_FONT_SIZE {
+		size = DEFAULT_FONT_SIZE
+	}
+	if len(fontFamily) < 1	{
+		fontFamily = DEFAULT_FONT_FAMILY
+	}
+
 	f := &Font{}
 	f.SetFamily(fontFamily)
 	f.SetSize(size)

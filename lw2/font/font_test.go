@@ -16,7 +16,7 @@ package font_test
 import (
 	"fmt"
 	"testing"
-	"lw2/font"
+	"golang-course-ispring/lw2/font"
 )
 
 func TestFont(t *testing.T) {
